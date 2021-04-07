@@ -2,69 +2,42 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const dotenv = require("dotenv");
 const { graphqlHTTP } = require("express-graphql");
-const { buildSchema } = require("graphql");
+const mongoose = require("mongoose");
+const graphQlSchema = require("./graphql/schema/index");
+const graphQlresolvers = require("./graphql/resolver/index");
+
 dotenv.config();
-
 const app = express();
-
 app.use(bodyParser.json());
 
-const events = [];
+// const events = [];
 // Middleware "/graphql" is an endpoint (only one endpoint)
 app.use(
   "/graphql",
   graphqlHTTP({
-    schema: buildSchema(`
-        type Event {
-            _id: ID!
-            title: String!
-            description: String!
-            price: Float!
-            date: String!
-        }
-
-        input EventInput{
-            title: String!
-            description: String!
-            price: Float!
-            date: String!
-        }
-        type RootQuery{
-            events:[Event!]!
-        }
-        type RootMutation{
-            createEvent(eventInput: EventInput):Event
-        }
-
-        schema{
-            query: RootQuery,
-            mutation: RootMutation
-        }
-    `),
-    rootValue: {
-      // Resolvers same name as query and mutation
-      events: () => {
-        return events;
-      },
-      createEvent: (args) => {
-        const event = {
-          _id: Math.random.toString(),
-          title: args.eventInput.title,
-          description: args.eventInput.description,
-          price: +args.eventInput.price,
-          date: args.eventInput.date,
-          //   date: new Date().toISOString(),
-        };
-        events.push(event);
-        return event;
-      },
-    },
+    schema: graphQlSchema,
+    rootValue: graphQlresolvers,
     graphiql: true,
   })
 );
 
+const url = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@cluster0.hhaiv.mongodb.net/${process.env.MONGO_DATABASE}?retryWrites=true&w=majority`;
+
+mongoose
+  .connect(url, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useCreateIndex: true,
+  })
+  .then(() => {
+    console.log(":) Mongo Connected Successfully");
+  })
+  .catch((err) => {
+    console.log(err);
+  });
+
 app.get("/", (req, res) => {
-  res.send("Sandeep Shakya");
+  res.send("A GraphQL API");
 });
 const port = process.env.PORT;
 

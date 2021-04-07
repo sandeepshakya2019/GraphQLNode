@@ -1,12 +1,13 @@
 For fetching the data => 
 
+// to retrieve the event
 query {
   events{
     title
   }
 }
 
-for mutating the data like update create delte 
+// for mutating the data like update create delete
 
 mutation {
   createEvent (eventInput : {
@@ -17,5 +18,17 @@ mutation {
   }) {
     title
     description
+  }
+}
+
+// to create the event
+mutation {
+  createEvent(eventInput: {title: "Second Event", description: "First Event desc", price: 50, date: "2021-04-07T03:18:22.547Z"}){title}
+}
+
+// To create the user
+mutation{
+  createUser(userInput:{email:"sandeep@gmail.com",password:"sandeep"}){
+    email
   }
 }
