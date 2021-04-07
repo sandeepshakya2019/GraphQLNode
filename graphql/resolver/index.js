@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const Event = require("../../model/event");
 const User = require("../../model/user");
+const Booking = require("../../model/booking");
 
 const events = (eventIds) => {
   return Event.find({ _id: { $in: eventIds } })
@@ -9,6 +10,7 @@ const events = (eventIds) => {
         return {
           ...event._doc,
           _id: event._doc._id.toString(),
+          date: new Date(event._doc.date).toISOString(),
           creator: user.bind(this, event._doc.creator),
         };
       });
@@ -17,6 +19,7 @@ const events = (eventIds) => {
       throw err;
     });
 };
+
 const user = (userId) => {
   return User.findById(userId)
     .then((user) => {
@@ -46,6 +49,7 @@ module.exports = {
           return {
             ...event._doc,
             _id: event._doc._id.toString(),
+            date: new Date(event._doc.date).toISOString(),
             creator: user.bind(this, event._doc.creator),
           };
         });
@@ -55,6 +59,22 @@ module.exports = {
         throw err;
       });
   },
+  booking: () => {
+    return Booking.find()
+      .then((bookings) => {
+        return bookings.map((booking) => {
+          return {
+            ...booking._doc,
+            _id: booking._doc._id.toString(),
+            createdAt: new Date(booking._doc.createdAt).toISOString(),
+            updatedAt: new Date(booking._doc.updatedAt).toISOString(),
+          };
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  },
   // Create Event Resolver or Mutation
   createEvent: (args) => {
     const event = new Event({
@@ -62,7 +82,7 @@ module.exports = {
       description: args.eventInput.description,
       price: +args.eventInput.price,
       date: new Date(args.eventInput.date),
-      creator: "606d3e5c634a333c2c652474",
+      creator: "606d62fe55477729604e3a0f",
     });
     // events.push(event);
     let createdEvent;
@@ -73,9 +93,10 @@ module.exports = {
           ...result._doc,
           password: null,
           _id: result._doc._id.toString(),
+          date: new Date(event._doc.date).toISOString(),
           creator: user.bind(this, result._doc.creator),
         };
-        return User.findById("606d3e5c634a333c2c652474")
+        return User.findById("606d62fe55477729604e3a0f")
           .then((user) => {
             if (!user) {
               throw new Error("User Not found");
@@ -134,6 +155,31 @@ module.exports = {
               throw err;
             });
         }
+      })
+      .catch((err) => {
+        throw err;
+      });
+  },
+  bookEvent: (args) => {
+    return Event.findOne({ _id: args.eventId })
+      .then((fetchedEvent) => {
+        const booking = new Booking({
+          user: "606d3fa1b1ebb52f701cfb96",
+          event: fetchedEvent,
+        });
+        return booking
+          .save()
+          .then((result) => {
+            return {
+              ...result._doc,
+              _id: result.id,
+              createdAt: new Date(result._doc.createdAt).toISOString(),
+              updatedAt: new Date(result._doc.updatedAt).toISOString(),
+            };
+          })
+          .catch((err) => {
+            throw err;
+          });
       })
       .catch((err) => {
         throw err;
